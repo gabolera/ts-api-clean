@@ -18,19 +18,25 @@ export class SignUpController {
     this.emailValidator = emailValidator
   }
   handle(request: Request): Response {
-    const requiredFields = ['email', 'name', 'password', 'confirm_password']
+    try {
+      const requiredFields = ['email', 'name', 'password', 'confirm_password']
 
-    for (const validField of requiredFields) {
-      if (!request.body[validField]) {
-        return HttpResponse.status(400).send(new MissingParamError(validField))
+      for (const validField of requiredFields) {
+        if (!request.body[validField]) {
+          return HttpResponse.status(400).send(
+            new MissingParamError(validField)
+          )
+        }
       }
-    }
 
-    const validEmail = this.emailValidator.verify(request.body.email)
-    if (!validEmail) {
-      return HttpResponse.status(400).send(new InvalidParamError('email'))
-    }
+      const validEmail = this.emailValidator.verify(request.body.email)
+      if (!validEmail) {
+        return HttpResponse.status(400).send(new InvalidParamError('email'))
+      }
 
-    return HttpResponse.status(200).send()
+      return HttpResponse.status(200).send()
+    } catch (err: any) {
+      return HttpResponse.status(500).send({ message: 'Internal Server Error' })
+    }
   }
 }
