@@ -1,7 +1,17 @@
 import { describe, expect, test, vitest } from 'vitest'
 import { SignUpController } from './SignUpController'
 import { InvalidParamError, MissingParamError } from '../../errors'
-import { EmailValidator } from './protocols/EmailValidator'
+import { EmailValidator } from './SignUpProtocols'
+
+const emailValidatorFactory = (): EmailValidator => {
+  class EmailValidatorStub implements EmailValidator {
+    public isValid = true
+    verify(email: string): boolean {
+      return this.isValid
+    }
+  }
+  return new EmailValidatorStub()
+}
 
 interface SutTypes {
   sut: SignUpController
@@ -9,13 +19,7 @@ interface SutTypes {
 }
 
 const makeSut = (): SutTypes => {
-  class EmailValidatorStub implements EmailValidator {
-    public isValid = true
-    verify(email: string): boolean {
-      return this.isValid
-    }
-  }
-  const emailValidatorStub = new EmailValidatorStub()
+  const emailValidatorStub = emailValidatorFactory()
   // const signUpRepository = new signUpRepository()
   const sut = new SignUpController({ emailValidator: emailValidatorStub })
 
@@ -26,7 +30,7 @@ const makeSut = (): SutTypes => {
 }
 
 describe('SignUp Controller Test ', () => {
-  test('should return 400 if email is not provided', () => {
+  test('should return 400 if email is not provided', async () => {
     const request = {
       body: {
         name: 'any_name',
@@ -35,12 +39,12 @@ describe('SignUp Controller Test ', () => {
       },
     }
     const { sut } = makeSut()
-    const response = sut.handle(request)
+    const response = await sut.handle(request)
     expect(response.statusCode).toEqual(400)
     expect(response.data).toEqual(new MissingParamError('email'))
   })
 
-  test('should return 400 if name is not provided', () => {
+  test('should return 400 if name is not provided', async () => {
     const request = {
       body: {
         email: 'any_email@mail.com',
@@ -49,12 +53,12 @@ describe('SignUp Controller Test ', () => {
       },
     }
     const { sut } = makeSut()
-    const response = sut.handle(request)
+    const response = await sut.handle(request)
     expect(response.statusCode).toEqual(400)
     expect(response.data).toEqual(new MissingParamError('name'))
   })
 
-  test('should return 400 if password is not provided', () => {
+  test('should return 400 if password is not provided', async () => {
     const request = {
       body: {
         email: 'any_email@mail.com',
@@ -63,12 +67,12 @@ describe('SignUp Controller Test ', () => {
       },
     }
     const { sut } = makeSut()
-    const response = sut.handle(request)
+    const response = await sut.handle(request)
     expect(response.statusCode).toEqual(400)
     expect(response.data).toEqual(new MissingParamError('password'))
   })
 
-  test('should return 400 if confirm_password is not provided', () => {
+  test('should return 400 if confirm_password is not provided', async () => {
     const request = {
       body: {
         email: 'any_email@mail.com',
@@ -77,12 +81,27 @@ describe('SignUp Controller Test ', () => {
       },
     }
     const { sut } = makeSut()
-    const response = sut.handle(request)
+    const response = await sut.handle(request)
     expect(response.statusCode).toEqual(400)
     expect(response.data).toEqual(new MissingParamError('confirm_password'))
   })
 
-  test('should return 400 if is invalid email', () => {
+  test('should return 400 if password confirm not match', async () => {
+    const request = {
+      body: {
+        email: 'any_email@mail.com',
+        name: 'any_name',
+        password: 'any_password',
+        confirm_password: 'any_password22',
+      },
+    }
+    const { sut } = makeSut()
+    const response = await sut.handle(request)
+    expect(response.statusCode).toEqual(400)
+    expect(response.data).toEqual(new InvalidParamError('passwords'))
+  })
+
+  test('should return 400 if is invalid email', async () => {
     const request = {
       body: {
         email: 'invalid_email#mail.com',
@@ -93,12 +112,12 @@ describe('SignUp Controller Test ', () => {
     }
     const { sut, emailValidatorStub } = makeSut()
     vitest.spyOn(emailValidatorStub, 'verify').mockReturnValueOnce(false)
-    const response = sut.handle(request)
+    const response = await sut.handle(request)
     expect(response.statusCode).toEqual(400)
     expect(response.data).toEqual(new InvalidParamError('email'))
   })
 
-  test('should call EmailValidator with correct email', () => {
+  test('should call EmailValidator with correct email', async () => {
     const request = {
       body: {
         email: 'any_email@mail.com',
@@ -111,18 +130,15 @@ describe('SignUp Controller Test ', () => {
     const isValidSpy = vitest
       .spyOn(emailValidatorStub, 'verify')
       .mockReturnValueOnce(false)
-    sut.handle(request)
+    await sut.handle(request)
     expect(isValidSpy).toHaveBeenCalledWith('any_email@mail.com')
   })
 
-  test('should return 500 if EmailValidator throws', () => {
-    class EmailValidatorStub implements EmailValidator {
-      verify(email: string): boolean {
-        throw new Error('Any exception on EmailValidator')
-      }
-    }
-    const emailValidatorStub = new EmailValidatorStub()
-    const sut = new SignUpController({ emailValidator: emailValidatorStub })
+  test('should return 500 if EmailValidator throws', async () => {
+    const { sut, emailValidatorStub } = makeSut()
+    vitest.spyOn(emailValidatorStub, 'verify').mockImplementationOnce(() => {
+      throw new Error('Erro inesperado!')
+    })
 
     const request = {
       body: {
@@ -132,7 +148,40 @@ describe('SignUp Controller Test ', () => {
         confirm_password: 'any_password',
       },
     }
-    const response = sut.handle(request)
+    const response = await sut.handle(request)
     expect(response.statusCode).toEqual(500)
+  })
+
+  test.skip('should AddAccount is called', async () => {
+    const { sut, emailValidatorStub } = makeSut()
+    vitest.spyOn(emailValidatorStub, 'verify').mockImplementationOnce(() => {
+      throw new Error('Erro inesperado!')
+    })
+
+    const request = {
+      body: {
+        email: 'any_email@mail.com',
+        name: 'any_name',
+        password: 'any_password',
+        confirm_password: 'any_password',
+      },
+    }
+    const response = await sut.handle(request)
+    expect(response.statusCode).toEqual(500)
+  })
+
+  test('should return 200 if all correctly values', async () => {
+    const { sut } = makeSut()
+
+    const request = {
+      body: {
+        email: 'any_email@mail.com',
+        name: 'any_name',
+        password: 'any_password',
+        confirm_password: 'any_password',
+      },
+    }
+    const response = await sut.handle(request)
+    expect(response.statusCode).toEqual(200)
   })
 })

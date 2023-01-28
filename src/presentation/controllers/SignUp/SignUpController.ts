@@ -1,5 +1,5 @@
-import HttpResponse, { Request, Response } from '../../protocols/HttpProtocol'
-import { EmailValidator } from './protocols/EmailValidator'
+import { Request, Response, HttpResponse, Controller } from './SignUpProtocols'
+import { EmailValidator } from '../../protocols/EmailValidator'
 import { MissingParamError, InvalidParamError } from '../../errors'
 
 interface SignUpControllerDependencies {
@@ -7,7 +7,7 @@ interface SignUpControllerDependencies {
   emailValidator: EmailValidator
 }
 
-export class SignUpController {
+export class SignUpController implements Controller {
   private readonly signUpRepository: any
   private readonly emailValidator: EmailValidator
   constructor({
@@ -17,26 +17,28 @@ export class SignUpController {
     this.signUpRepository = signUpRepository
     this.emailValidator = emailValidator
   }
-  handle(request: Request): Response {
+  async handle(request: Request): Promise<Response> {
     try {
       const requiredFields = ['email', 'name', 'password', 'confirm_password']
 
       for (const validField of requiredFields) {
         if (!request.body[validField]) {
-          return HttpResponse.status(400).send(
-            new MissingParamError(validField)
-          )
+          return HttpResponse.badRequest(new MissingParamError(validField))
         }
+      }
+
+      if (request.body.password !== request.body.confirm_password) {
+        return HttpResponse.badRequest(new InvalidParamError('passwords'))
       }
 
       const validEmail = this.emailValidator.verify(request.body.email)
       if (!validEmail) {
-        return HttpResponse.status(400).send(new InvalidParamError('email'))
+        return HttpResponse.badRequest(new InvalidParamError('email'))
       }
 
       return HttpResponse.status(200).send()
     } catch (err: any) {
-      return HttpResponse.status(500).send({ message: 'Internal Server Error' })
+      return HttpResponse.serverError({ message: 'Internal Server Error' })
     }
   }
 }

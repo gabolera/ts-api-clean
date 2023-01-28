@@ -1,23 +1,35 @@
-class Http {
-  private statusCode: number = 200
-  private data: any
+export class HttpResponse {
+  private static statusCode: number = 200
+  private static data: any
 
-  status(code: number) {
-    this.statusCode = code
-    return this
+  public static status(code: number) {
+    HttpResponse.statusCode = code
+    return HttpResponse
   }
 
-  send(data: any = ''): Response {
-    this.data = data
+  public static send(data?: any): Response {
+    HttpResponse.data = data ?? ''
 
     return {
-      statusCode: this.statusCode,
-      data: this.data ?? '',
+      statusCode: HttpResponse.statusCode,
+      data: HttpResponse.data ?? '',
+    }
+  }
+
+  public static badRequest(data: any): Response {
+    return {
+      statusCode: 400,
+      data: data ?? '',
+    }
+  }
+
+  public static serverError(data: any): Response {
+    return {
+      statusCode: 500,
+      data: data ?? '',
     }
   }
 }
-
-export default new Http()
 
 export interface Request {
   headers?: any
