@@ -1,5 +1,5 @@
 import { describe, test } from 'vitest'
 
-describe('SignUp Controller', () => {
+describe('SignUp Controller Test', () => {
   test('', () => {})
 })
