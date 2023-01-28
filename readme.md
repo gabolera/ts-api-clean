@@ -1,13 +1,20 @@
+### Auto checker - API
 
-### Autenticação
-[] Login
-[] Register
 
-### Produtos
-`id | nome | descricao | quantidade | valor`
+### TODO
 
-[] Create
-[] Read
-[] Update
-[] Delete
+##### Auth
 
+ - [ ] SignUp
+ - [ ] Login
+
+
+#### Checker
+
+ - [ ] CreateChecker
+ - [ ] EditChecker
+ - [ ] StopChecker
+ - [ ] DeleteChecker
+ - [ ] AddFieldsToCheck (stauts code, body?.param)
+ - [ ] AddMultiplesMachinesChecker
+ - [ ] AddCronChecker
