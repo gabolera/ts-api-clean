@@ -1,3 +1,3 @@
 {
-  "*.ts": ["yarn prettier 'src/**' --write", "yarn test:staged"]
+  "*.ts": ["yarn prettier 'src/**' --write"]
 }
