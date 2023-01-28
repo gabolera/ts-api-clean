@@ -7,7 +7,7 @@ class Http {
     return this
   }
 
-  json(data: any = ''): Response {
+  send(data: any = ''): Response {
     this.data = data
 
     return {
