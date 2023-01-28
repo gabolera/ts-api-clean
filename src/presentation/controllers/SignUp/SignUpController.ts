@@ -1,3 +1,1 @@
-export class SignUpController{
-  
-}
+export class SignUpController {}
