@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "test": "vitest",
-    "test:staged": "vitest --run"
+    "test:staged": "vitest --run --passWithNoTests"
   },
   "dependencies": {},
   "devDependencies": {
