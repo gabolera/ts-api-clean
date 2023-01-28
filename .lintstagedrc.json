@@ -1,0 +1,3 @@
+{
+  "*.ts": ["prettier --write", "yarn run test:staged", "git add"]
+}
